@@ -10,22 +10,15 @@ public class Publisher {
 
     public static void main(String[] args) throws StompJException {
         // connect
-        Connection con = new Connection("localhost", 61613, "admin", "password");
-        con.connect();
+        Connection con = new Connection("service.coolshare.pw", 61613, "user-test", "123");
+
+        // connect
+        HashMap<String, String> connectOptionalHeaders = new HashMap<>();
+        connectOptionalHeaders.put("host", "vhost-test");
+        con.connect(connectOptionalHeaders);
 
         // send
-        /*
-        DefaultMessage msg = new DefaultMessage();
-        msg.setProperty("type", "text/plain");
-        msg.setProperty("target", "mee");
-        msg.setContent("Java test message!");
-
-        con.send(msg, "/topic/msg-exchange");
-        */
-        HashMap<String, String> optionalHeaders = new HashMap<>();
-        optionalHeaders.put("target", "mee1");
-
-        con.send("Java test message!", "/topic/msg-exchange", optionalHeaders);
+        con.send("Java test message, from sender1!", "/topic/sender1.sub4");
 
         // disconnect
         con.disconnect();

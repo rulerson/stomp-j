@@ -27,9 +27,7 @@ public class Connection {
 	}
 
 	public Connection(String host, int port, String userid, String password) {
-		messageHandlers = new ConcurrentHashMap();
-		session = new StompJSession(host, port, userid, password, this,
-				messageHandlers);
+		session = new StompJSession(host, port, userid, password, this);
 	}
 
 	public ErrorMessage connect() throws StompJException {
@@ -64,7 +62,8 @@ public class Connection {
 		this.subscribe(destination, true, optionalHeaders);
 	}
 
-    public void subscribe(String destination, boolean autoAck, HashMap<String, String> optionalHeaders) {
+	// cannot ack by client now, always auto ack
+    private void subscribe(String destination, boolean autoAck, HashMap<String, String> optionalHeaders) {
         session.subscribe(destination, autoAck, optionalHeaders);
     }
 
@@ -84,26 +83,23 @@ public class Connection {
 		MessageImpl m = new MessageImpl();
 		try {
 			m.setContent(msg.getBytes("UTF-8"));
+			if(optionalHeaders != null)
             m.setProperties(optionalHeaders);
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
 		send(((Message) (m)), destination);
 	}
-
-	public void addMessageHandler(String destination, MessageHandler handler) {
-		CopyOnWriteArraySet set = new CopyOnWriteArraySet();
-		messageHandlers.putIfAbsent(destination, set);
-		((CopyOnWriteArraySet) messageHandlers.get(destination)).add(handler);
+	public void send(String msg, String destination) {
+		this.send(msg, destination, null);
 	}
 
-	public MessageHandler[] getMessageHandlers(String destination) {
-		return (MessageHandler[]) ((CopyOnWriteArraySet) messageHandlers
-				.get(destination)).toArray(new MessageHandler[0]);
+	public void setMessageHandler(MessageHandler handler) {
+		this.messageHandler = handler;
 	}
 
-	public void removeMessageHandlers(String destination) {
-		messageHandlers.remove("destination");
+	public MessageHandler getMessageHandler() {
+		return this.messageHandler;
 	}
 
 	public ErrorHandler getErrorHandler() {
@@ -115,6 +111,6 @@ public class Connection {
 	}
 
 	private StompJSession session;
-	private ConcurrentHashMap messageHandlers;
+	private MessageHandler messageHandler = null;
 	private ErrorHandler errorHandler;
 }

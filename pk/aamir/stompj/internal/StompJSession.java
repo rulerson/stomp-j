@@ -18,13 +18,12 @@ import pk.aamir.stompj.*;
 public class StompJSession {
 
 	public StompJSession(String host, int port, String userid, String password,
-			Connection con, Map handlers) {
+			Connection con) {
 		this.host = host;
 		this.port = port;
 		this.userid = userid;
 		this.password = password;
 		connection = con;
-		messageHandlers = handlers;
 		autoAckMap = new HashMap();
 	}
 
@@ -35,7 +34,7 @@ public class StompJSession {
 			output = new BufferedOutputStream(socket.getOutputStream());
 			output.write(createCONNECTFrame(userid, password, optionalHeaders));
 			output.flush();
-			frameReceiver = new FrameReceiver(this, input, messageHandlers);
+			frameReceiver = new FrameReceiver(this, input);
 			ErrorMessage errorMsg = frameReceiver.processFirstResponse();
 			if (errorMsg == null) {
                 frameReceiver.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -104,7 +103,7 @@ public class StompJSession {
 
 	void sendAckIfNeeded(Message msg) {
 		if (!((Boolean) autoAckMap.get(msg.getDestination())).booleanValue())
-			sendFrame(createACKFrame(msg.getMessageId()));
+			sendFrame(createACKFrame(msg.getMessageId()));	// always auto ack
 	}
 
 	public void send(Message msg, String destination) {
@@ -264,5 +263,4 @@ public class StompJSession {
 	private Connection connection;
 	private HashMap autoAckMap;
 	private FrameReceiver frameReceiver;
-	private Map messageHandlers;
 }

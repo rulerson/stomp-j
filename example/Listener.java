@@ -9,14 +9,14 @@ public class Listener {
 
     public static void main(String[] args) throws StompJException, IOException {
         // connect
-        Connection con = new Connection("localhost", 61613, "admin", "password");
-        con.connect();
+        Connection con = new Connection("service.coolshare.pw", 61613, "user-test", "123");
 
         // add msg listener
-        con.addMessageHandler("/topic/msg-exchange", new MessageHandler() {
+        con.setMessageHandler(new MessageHandler() {
             public void onMessage(Message msg) {
+                System.out.println("message---------");
                 String[] propNameS = msg.getPropertyNames();
-                for (String propName : propNameS){
+                for (String propName : propNameS) {
                     System.out.println(propName + ":" + msg.getProperty(propName));
                 }
                 System.out.println(msg.getContentAsString());
@@ -27,15 +27,18 @@ public class Listener {
         con.setErrorHandler(new ErrorHandler() {
             @Override
             public void onError(ErrorMessage errormessage) {
-                System.out.println(errormessage.getContentAsString());
+                System.out.println(errormessage.getMessage());
             }
         });
 
-        // subscribe
-        HashMap<String, String> optionalHeaders = new HashMap<>();
-        optionalHeaders.put("selector", "target = 'mee'");
+        // connect
+        HashMap<String, String> connectOptionalHeaders = new HashMap<>();
+        connectOptionalHeaders.put("host", "vhost-test");
+        con.connect(connectOptionalHeaders);
 
-        con.subscribe("/topic/msg-exchange", optionalHeaders);
+        // subscribe
+        HashMap<String, String> subOptionalHeaders = new HashMap<>();
+        con.subscribe("/topic/*.sub2", subOptionalHeaders);
 
         System.in.read();
 

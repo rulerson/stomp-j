@@ -17,10 +17,9 @@ import pk.aamir.stompj.*;
 public class FrameReceiver extends Thread {
 	private volatile boolean mRun = true;
 
-	public FrameReceiver(StompJSession session, InputStream input, Map handlers) {
+	public FrameReceiver(StompJSession session, InputStream input) {
 		this.session = session;
 		this.input = input;
-		messageHandlers = handlers;
 		mRun = true;
 	}
 
@@ -85,22 +84,24 @@ public class FrameReceiver extends Thread {
 		int contentLength = -1;
 		if (cl != null) {
 			contentLength = Integer.parseInt(cl);
-			properties.remove("content-length");
 		}
-		String msgId = (String) properties.remove("message-id");
+		String msgId = (String) properties.get("message-id");
 		msg.setMessageId(msgId);
-		String destination = (String) properties.remove("destination");
+		String destination = (String) properties.get("destination");
 		msg.setDestination(destination);
 		msg.setProperties(properties);
 		msg.setContent(getFrameBody(contentLength));
-		session.sendAckIfNeeded(msg);
-		for (Iterator iter = ((Set) messageHandlers.get(msg.getDestination()))
-				.iterator(); iter.hasNext(); (new Thread() {
-			public void run() {
-				mh.onMessage(msg);
-			}
-		}).start())
-			mh = (MessageHandler) iter.next();
+		//session.sendAckIfNeeded(msg);   // always auto
+
+		// notify message
+		final MessageHandler messageHandler = session.getConnection().getMessageHandler();
+		if(messageHandler != null) {
+			new Thread() {
+				public void run() {
+					messageHandler.onMessage(msg);
+				}
+			}.start();
+		}
 	}
 
 	private ErrorMessage processERRORFrame() {
@@ -165,6 +166,4 @@ public class FrameReceiver extends Thread {
 	private StompJSession session;
 	private InputStream input;
 	private String sessionId;
-	private Map messageHandlers;
-	private MessageHandler mh;
 }
