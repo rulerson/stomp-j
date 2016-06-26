@@ -37,8 +37,7 @@ public class Listener {
         con.connect(connectOptionalHeaders);
 
         // subscribe
-        HashMap<String, String> subOptionalHeaders = new HashMap<>();
-        con.subscribe("/topic/*.sub2", subOptionalHeaders);
+        con.subscribe("/topic/*.sub2");
 
         System.in.read();
 
